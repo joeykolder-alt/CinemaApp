@@ -1,0 +1,19 @@
+add-room "IMAX Laser" 200
+add-room "Dolby Cinema" 150
+add-room "Standard Screen" 100
+add-movie "Dune: Part Two" 02:46
+add-movie "Oppenheimer" 03:00
+add-movie "Barbie" 01:54
+add-movie "Poor Things" 02:21
+add-show "Dune: Part Two" "IMAX Laser" 2026-02-01T10:00 19.99
+add-show "Oppenheimer" "Dolby Cinema" 2026-02-01T13:00 18.99
+add-show "Barbie" "Standard Screen" 2026-02-01T14:00 12.99
+add-show "Poor Things" "IMAX Laser" 2026-02-01T17:00 16.99
+list-shows 2026-02-01
+book 1 100 101 102 103
+book 2 75 76
+book 3 50
+list-shows 2026-02-01
+marathon 2026-02-01
+help
+exit

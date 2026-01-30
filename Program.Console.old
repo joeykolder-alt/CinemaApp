@@ -1,0 +1,172 @@
+﻿using CinemaApp.Repositories;
+using CinemaApp.Services;
+
+namespace CinemaApp;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var showStore = new InMemoryShowStore();
+        var marathonPlanner = new GreedyMarathonPlanner();
+        var cinema = new CinemaManager(showStore, marathonPlanner);
+
+        Console.WriteLine("═══════════════════════════════════════");
+        Console.WriteLine("   🎬 Cinema Management System 🎬");
+        Console.WriteLine("═══════════════════════════════════════");
+        Console.WriteLine();
+
+        DisplayHelp();
+
+        while (true)
+        {
+            Console.Write("\n> ");
+            var input = Console.ReadLine()?.Trim();
+
+            if (string.IsNullOrWhiteSpace(input))
+                continue;
+
+            var parts = ParseCommand(input);
+            if (parts.Length == 0)
+                continue;
+
+            var command = parts[0].ToLower();
+
+            try
+            {
+                switch (command)
+                {
+                    case "add-room":
+                        if (parts.Length != 3)
+                        {
+                            Console.WriteLine("Usage: add-room \"Room Name\" <capacity>");
+                            break;
+                        }
+                        cinema.AddRoom(parts[1], int.Parse(parts[2]));
+                        break;
+
+                    case "add-movie":
+                        if (parts.Length != 3)
+                        {
+                            Console.WriteLine("Usage: add-movie \"Movie Title\" HH:mm");
+                            break;
+                        }
+                        var duration = TimeSpan.ParseExact(parts[2], @"hh\:mm", null);
+                        cinema.AddMovie(parts[1], duration);
+                        break;
+
+                    case "add-show":
+                        if (parts.Length != 5)
+                        {
+                            Console.WriteLine("Usage: add-show \"Movie Title\" \"Room Name\" yyyy-MM-ddTHH:mm price");
+                            break;
+                        }
+                        var startTime = DateTime.Parse(parts[3]);
+                        var price = decimal.Parse(parts[4]);
+                        cinema.AddShow(parts[1], parts[2], startTime, price);
+                        break;
+
+                    case "list-shows":
+                        if (parts.Length != 2)
+                        {
+                            Console.WriteLine("Usage: list-shows yyyy-MM-dd");
+                            break;
+                        }
+                        var date = DateTime.Parse(parts[1]);
+                        cinema.ListShows(date);
+                        break;
+
+                    case "book":
+                        if (parts.Length < 3)
+                        {
+                            Console.WriteLine("Usage: book <showId> <seat1> [seat2] [seat3] ...");
+                            break;
+                        }
+                        var showId = int.Parse(parts[1]);
+                        var seats = parts.Skip(2).Select(int.Parse).ToArray();
+                        cinema.BookSeats(showId, seats);
+                        break;
+
+                    case "marathon":
+                        if (parts.Length != 2)
+                        {
+                            Console.WriteLine("Usage: marathon yyyy-MM-dd");
+                            break;
+                        }
+                        var marathonDate = DateTime.Parse(parts[1]);
+                        cinema.PlanMarathon(marathonDate);
+                        break;
+
+                    case "help":
+                        DisplayHelp();
+                        break;
+
+                    case "exit":
+                        Console.WriteLine("\nThank you for using Cinema Management System! 👋");
+                        return;
+
+                    default:
+                        Console.WriteLine($"Unknown command: {command}. Type 'help' for available commands.");
+                        break;
+                }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Error: Invalid format. Please check your input.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+
+    static void DisplayHelp()
+    {
+        Console.WriteLine("Available Commands:");
+        Console.WriteLine("──────────────────────────────────────");
+        Console.WriteLine("  add-room \"Room A\" 100");
+        Console.WriteLine("  add-movie \"Inception\" 02:28");
+        Console.WriteLine("  add-show \"Inception\" \"Room A\" 2025-11-01T10:00 9.99");
+        Console.WriteLine("  list-shows 2025-11-01");
+        Console.WriteLine("  book <showId> <seat1> [seat2] ...");
+        Console.WriteLine("  marathon 2025-11-01");
+        Console.WriteLine("  help");
+        Console.WriteLine("  exit");
+        Console.WriteLine("──────────────────────────────────────");
+    }
+
+    static string[] ParseCommand(string input)
+    {
+        var parts = new List<string>();
+        var current = "";
+        var inQuotes = false;
+
+        foreach (var c in input)
+        {
+            if (c == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (c == ' ' && !inQuotes)
+            {
+                if (!string.IsNullOrEmpty(current))
+                {
+                    parts.Add(current);
+                    current = "";
+                }
+            }
+            else
+            {
+                current += c;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(current))
+        {
+            parts.Add(current);
+        }
+
+        return parts.ToArray();
+    }
+}
